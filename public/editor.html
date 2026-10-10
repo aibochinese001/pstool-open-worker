@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="zh-CN">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="x-ua-compatible" content="IE=edge" />
+	<title>图像编辑器 - 免费在线修图工具</title>
+	<meta name="description" content="免费在线图像编辑器，基于开源项目 miniPaint。支持图层、滤镜、裁剪、文字、画笔等功能，图片在浏览器本地处理，无需上传服务器，无需安装任何软件。" />
+	<meta name="keywords" content="在线PS,图像编辑器,修图,图片处理,图层,滤镜,抠图,裁剪,画笔,文字,免费,开源" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0" />
+	<link rel="icon" sizes="192x192" href="images/manifest/icon-192x192.png">
+	<link rel="apple-touch-icon" href="images/manifest/apple-touch-icon-180.png">
+	<link rel="manifest" href="manifest.json">
+	<meta name="theme-color" content="#373d3f" />
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="apple-mobile-web-app-title" content="图像编辑器">
+
+	<script src="dist/bundle.js?v=9"></script>
+</head>
+<body>
+	<div class="wrapper">
+
+		<nav aria-label="Main Menu" class="main_menu" id="main_menu"></nav>
+
+		<div class="submenu">
+			<a class="logo" href="#">图像编辑器</a>
+			<div class="block attributes" id="action_attributes"></div>
+			<button class="undo_button" id="undo_button" type="button">
+				<span class="sr_only">Undo</span>
+			</button>
+		</div>
+
+		<div class="sidebar_left" id="tools_container"></div>
+
+
+		<div class="middle_area" id="middle_area">
+
+			<canvas class="ruler_left" id="ruler_left"></canvas>
+			<canvas class="ruler_top" id="ruler_top"></canvas>
+
+			<div class="main_wrapper" id="main_wrapper">
+				<div class="canvas_wrapper" id="canvas_wrapper">
+					<div id="mouse"></div>
+					<div class="transparent-grid" id="canvas_minipaint_background"></div>
+					<canvas id="canvas_minipaint">
+						<div class="trn error">
+							您的浏览器不支持 Canvas，或未启用 JavaScript。
+						</div>
+					</canvas>
+				</div>
+			</div>
+		</div>
+
+		<div class="sidebar_right">
+			<div class="preview block">
+				<h2 class="trn toggle" data-target="toggle_preview">Preview</h2>
+				<div id="toggle_preview"></div>
+			</div>
+
+			<div class="colors block">
+				<h2 class="trn toggle" data-target="toggle_colors">Colors</h2>
+				<div class="content" id="toggle_colors"></div>
+			</div>
+
+			<div class="block" id="info_base">
+				<h2 class="trn toggle toggle-full" data-target="toggle_info">Information</h2>
+				<div class="content" id="toggle_info"></div>
+			</div>
+
+			<div class="details block" id="details_base">
+				<h2 class="trn toggle toggle-full" data-target="toggle_details">Layer details</h2>
+				<div class="content details-content" id="toggle_details"></div>
+			</div>
+
+			<div class="layers block">
+				<h2 class="trn">Layers</h2>
+				<div class="content" id="layers_base"></div>
+			</div>
+		</div>
+	</div>
+	<div class="mobile_menu">
+		<button class="left_mobile_menu" id="left_mobile_menu_button" type="button">
+			<span class="sr_only">Toggle Menu</span>
+		</button>
+		<button class="right_mobile_menu" id="mobile_menu_button" type="button">
+			<span class="sr_only">Toggle Menu</span>
+		</button>
+	</div>
+	<div class="hidden" id="tmp"></div>
+	<div id="popups"></div>
+	<script>
+		if ('serviceWorker' in navigator) {
+			window.addEventListener('load', function () {
+				navigator.serviceWorker.register('service-worker.js').catch(function () {});
+			});
+		}
+		try {
+			navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ page: 'editor' })], { type: 'application/json' }));
+		} catch (e) { /* 统计失败不影响使用 */ }
+	</script>
+	<script>
+		/* 主页"从电脑打开/拖拽文件"暂存的文件，进入编辑器后自动打开 */
+		(function () {
+			function pullPendingFile() {
+				var req;
+				try {
+					req = indexedDB.open('pstool-home', 1);
+				} catch (e) { return; }
+				req.onupgradeneeded = function () {
+					req.result.createObjectStore('files');
+				};
+				req.onerror = function () {};
+				req.onsuccess = function () {
+					var db = req.result;
+					if (!db.objectStoreNames.contains('files')) return;
+					try {
+						var tx = db.transaction('files', 'readwrite');
+						var get = tx.objectStore('files').get('pending');
+						get.onsuccess = function () {
+							var rec = get.result;
+							if (!rec || !rec.blob) return;
+							tx.objectStore('files').delete('pending');
+							var tries = 0;
+							(function tryOpen() {
+								tries++;
+								if (window.FileOpen && typeof window.FileOpen.open_handler === 'function') {
+									var file = new File([rec.blob], rec.name || 'image.png', { type: rec.type || 'image/png' });
+									window.FileOpen.open_handler({ target: { files: [file] } });
+								} else if (tries < 100) {
+									setTimeout(tryOpen, 200);
+								}
+							})();
+						};
+					} catch (e) {}
+				};
+			}
+			if (document.readyState === 'complete') {
+				pullPendingFile();
+			} else {
+				window.addEventListener('load', pullPendingFile);
+			}
+		})();
+	</script>
+</body>
+</html>
