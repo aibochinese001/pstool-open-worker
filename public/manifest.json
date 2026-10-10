@@ -1,0 +1,29 @@
+{
+	"name": "图像编辑器",
+	"short_name": "图像编辑器",
+	"description": "免费在线图像编辑工具，支持图层、滤镜、裁剪、文字、画笔等功能，图片在浏览器本地处理，不上传服务器。",
+	"lang": "zh-CN",
+	"dir": "ltr",
+	"id": "/",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"orientation": "any",
+	"background_color": "#ffffff",
+	"theme_color": "#373d3f",
+	"categories": ["graphics", "photo", "utilities"],
+	"icons": [
+		{
+			"src": "/images/manifest/icon-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/images/manifest/icon-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any"
+		}
+	]
+}
