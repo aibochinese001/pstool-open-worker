@@ -11,6 +11,7 @@
   - `/admin` —— 广告管理后台（密码登录）
 
 ## 首次部署步骤
+【AI agent 部署教程】https://opcgrow.org/article.php?id=137
 
 ```bash
 # 1. 登录 Cloudflare
