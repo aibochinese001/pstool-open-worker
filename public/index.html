@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>图像编辑器 - 免费在线修图工具</title>
+	<meta name="description" content="免费在线图像编辑器，支持图层、滤镜、裁剪、文字、画笔等功能，图片在浏览器本地处理，无需上传服务器。打开网页即可新建项目或从电脑打开图片开始修图。" />
+	<meta name="keywords" content="在线PS,图像编辑器,修图,图片处理,图层,滤镜,抠图,裁剪,画笔,免费,开源" />
+	<link rel="icon" sizes="192x192" href="images/manifest/icon-192x192.png">
+	<link rel="apple-touch-icon" href="images/manifest/apple-touch-icon-180.png">
+	<link rel="manifest" href="manifest.json">
+	<meta name="theme-color" content="#373d3f" />
+	<style>
+		:root {
+			--brand-blue: #2b5cff;
+			--brand-purple: #8a3ffc;
+			--grad: linear-gradient(135deg, #2b5cff 0%, #6a3df5 55%, #a43ffc 100%);
+			--ink: #1c2333;
+			--ink-soft: #5a6478;
+			--line: #e6e9f2;
+			--bg: #f6f8fd;
+			--card: #ffffff;
+			--radius: 16px;
+			--shadow: 0 10px 30px rgba(28, 35, 51, .08);
+		}
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		html { -webkit-text-size-adjust: 100%; }
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+			background: var(--bg); color: var(--ink); line-height: 1.6;
+		}
+		a { color: inherit; }
+		.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+		/* ===== 顶栏 ===== */
+		.topbar { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+		.topbar-inner { display: flex; align-items: center; gap: 10px; height: 60px; }
+		.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; text-decoration: none; }
+		.brand img { width: 30px; height: 30px; border-radius: 8px; display: block; }
+		.topbar-nav { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+		.topbar-nav a {
+			text-decoration: none; font-size: 14px; color: var(--ink-soft); padding: 8px 12px; border-radius: 10px;
+			transition: background .15s, color .15s;
+		}
+		.topbar-nav a:hover { background: #eef1fa; color: var(--ink); }
+		.btn-install {
+			border: 0; cursor: pointer; font-size: 13.5px; font-weight: 600; color: #fff;
+			background: var(--grad); padding: 8px 16px; border-radius: 10px; margin-left: 4px;
+			transition: transform .15s, box-shadow .15s; font-family: inherit;
+		}
+		.btn-install:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(74, 76, 255, .35); }
+		.btn-install[hidden] { display: none; }
+
+		/* ===== 主布局：左主区 3/5 + 右侧栏 2/5 ===== */
+		.layout { display: grid; grid-template-columns: 3fr 2fr; gap: 36px; align-items: start; padding: 44px 0 8px; }
+		.hero { text-align: center; }
+		.side { display: flex; flex-direction: column; gap: 18px; padding-top: 4px; }
+		.side .block { padding: 0; }
+		.side .block-head { margin-bottom: 12px; }
+		.hero .logo-big { width: 88px; height: 88px; border-radius: 22px; box-shadow: var(--shadow); margin-bottom: 22px; }
+		.hero h1 { font-size: clamp(30px, 5.4vw, 46px); letter-spacing: 1px; }
+		.hero h1 .grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+		.hero .sub { margin-top: 12px; color: var(--ink-soft); font-size: clamp(14px, 2.4vw, 17px); }
+		.hero .sub b { color: var(--ink); font-weight: 600; }
+
+		.cta { display: flex; gap: 14px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
+		.btn {
+			display: inline-flex; align-items: center; gap: 9px; border: 0; cursor: pointer; text-decoration: none;
+			font-size: 16px; font-weight: 600; padding: 14px 30px; border-radius: 14px;
+			transition: transform .15s, box-shadow .15s, background .15s;
+		}
+		.btn:active { transform: scale(.97); }
+		.btn.primary { background: var(--grad); color: #fff; box-shadow: 0 8px 22px rgba(74, 76, 255, .35); }
+		.btn.primary:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(74, 76, 255, .42); }
+		.btn.ghost { background: #fff; color: var(--ink); border: 1.5px solid var(--line); }
+		.btn.ghost:hover { border-color: #c9d2f5; background: #fbfcff; transform: translateY(-2px); }
+
+		/* ===== 教程条 ===== */
+		.tutorial { display: flex; align-items: center; gap: 14px; width: 100%; margin: 0;
+			background: linear-gradient(135deg, #eef3ff, #f5efff); border: 1px solid #e3e7fb; border-radius: 14px;
+			padding: 14px 20px; text-decoration: none; transition: transform .15s, box-shadow .15s; }
+		.tutorial:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+		.tutorial .t-icon { font-size: 26px; }
+		.tutorial .t-title { font-weight: 700; font-size: 15px; }
+		.tutorial .t-desc { color: var(--ink-soft); font-size: 13px; }
+		.tutorial .t-go { margin-left: auto; color: var(--brand-blue); font-weight: 600; font-size: 14px; white-space: nowrap; }
+
+		/* ===== 区块通用 ===== */
+		section.block { padding: 44px 0 8px; }
+		.block-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+		.block-head h2 { font-size: 21px; letter-spacing: .5px; }
+		.block-head .hint { color: var(--ink-soft); font-size: 13px; }
+		.block-head .badge { background: #eef1fa; color: var(--ink-soft); font-size: 12px; padding: 2px 8px; border-radius: 999px; }
+
+		/* ===== 广告轮播 ===== */
+		.carousel { position: relative; border-radius: var(--radius); overflow: hidden; background: var(--card);
+			border: 1px solid var(--line); box-shadow: var(--shadow); min-height: 150px; }
+		.slides { position: relative; }
+		.slide { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity .6s ease; display: block; text-decoration: none; }
+		.slide.active { position: relative; opacity: 1; visibility: visible; }
+		.slide img.ad-img { width: 100%; height: 240px; object-fit: contain; background: #fff; display: block; }
+		.slide .ad-caption {
+			position: absolute; left: 12px; bottom: 12px; background: rgba(20, 24, 34, .68); color: #fff;
+			font-size: 13px; padding: 5px 12px; border-radius: 999px; backdrop-filter: blur(6px); max-width: 80%;
+			white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+		}
+		.slide .ad-html { padding: 10px; min-height: 120px; }
+		/* 响应式广告单元需要确定的容器宽度，禁用 flex 居中并强制满宽 */
+		.slide .ad-html ins, .slide .ad-html ins.adsbygoogle { width: 100%; }
+		.ads-empty { padding: 42px 20px; text-align: center; color: var(--ink-soft); font-size: 14px; }
+		.ads-empty b { display: block; font-size: 16px; color: var(--ink); margin-bottom: 4px; }
+		.dots { display: flex; gap: 8px; justify-content: center; padding: 12px 0 14px; }
+		.dots button { width: 8px; height: 8px; border-radius: 999px; border: 0; background: #cdd4ea; cursor: pointer; padding: 0; transition: width .25s, background .25s; }
+		.dots button.on { width: 22px; background: var(--grad); }
+
+		/* ===== 页脚 ===== */
+		footer { margin-top: 56px; border-top: 1px solid var(--line); background: #fff; }
+		.foot-inner { padding: 26px 20px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; color: var(--ink-soft); font-size: 13px; justify-content: center; }
+		.foot-inner a { color: var(--ink-soft; text-decoration: none; }
+		.foot-inner a:hover { color: var(--brand-blue); }
+		.foot-inner .foot-link { font-weight: 600; }
+		.foot-inner .dot { opacity: .4; }
+
+		@media (max-width: 920px) {
+			.layout { grid-template-columns: 1fr; gap: 26px; padding-top: 36px; }
+			.topbar-nav a:not(.keep) { display: none; }
+		}
+		@media (max-width: 460px) {
+			.btn { width: 100%; justify-content: center; }
+			.cta { flex-direction: column; }
+			.slide img.ad-img { height: 200px; }
+		}
+	</style>
+</head>
+<body>
+
+	<header class="topbar">
+		<div class="wrap topbar-inner">
+			<a class="brand" href="/">
+				<img src="images/manifest/icon-64x64.png" alt="图像编辑器" />
+				图像编辑器
+			</a>
+			<nav class="topbar-nav">
+				<a class="keep" href="https://opcgrow.org/course.php?id=24" target="_blank" rel="noopener">免费在线PS教程 ↗</a>
+				<a href="/admin">管理后台</a>
+				<button class="btn-install" id="btn-install" type="button" hidden>⬇ 安装应用</button>
+			</nav>
+		</div>
+	</header>
+
+	<main class="wrap">
+		<div class="layout">
+		<section class="hero">
+			<img class="logo-big" src="images/manifest/icon-192x192.png" alt="图像编辑器 Logo" />
+			<h1>在线<span class="grad">图像编辑器</span></h1>
+			<p class="sub"><b>免费</b> · 无需安装 · 图片<b>本地处理</b>，不会上传服务器</p>
+
+			<div class="cta">
+				<button class="btn primary" id="btn-new" type="button">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+					新建项目
+				</button>
+				<button class="btn ghost" id="btn-open" type="button">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 7a2 2 0 0 1 2-2h4l2 2.5h6a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+					从电脑打开
+				</button>
+			</div>
+
+		</section>
+
+		<aside class="side">
+			<a class="tutorial" href="https://opcgrow.org/course.php?id=24" target="_blank" rel="noopener">
+				<span class="t-icon">📚</span>
+				<span>
+					<span class="t-title">免费在线PS教程</span><br />
+					<span class="t-desc">零基础入门到精通，系统学习修图技巧</span>
+				</span>
+				<span class="t-go">前往学习 →</span>
+			</a>
+
+			<section class="block" id="ads-section">
+			<div class="block-head">
+				<h2>精选推荐</h2>
+				<span class="badge">广告</span>
+				<span class="hint" id="ads-hint"></span>
+			</div>
+			<div class="carousel" id="carousel" aria-label="广告轮播">
+				<div class="slides" id="slides">
+					<div class="ads-empty" id="ads-empty"><b>广告位招租</b>此处展示合作伙伴推荐内容</div>
+				</div>
+				<div class="dots" id="dots"></div>
+			</div>
+			</section>
+		</aside>
+		</div>
+	</main>
+
+	<footer>
+		<div class="wrap foot-inner">
+			<span>©2026 由<a href="https://opcgrow.org" target="_blank" rel="noopener" class="foot-link">opcgrow.org</a>提供技术支持</span>
+		</div>
+	</footer>
+
+	<input type="file" id="file-input" accept="image/*" multiple hidden />
+
+	<script>
+		(function () {
+			'use strict';
+
+			/* ===== 打开文件：主页暂存 → 编辑器自动打开 ===== */
+			var input = document.getElementById('file-input');
+
+			function stashFile(file) {
+				var req = indexedDB.open('pstool-home', 1);
+				req.onupgradeneeded = function () {
+					req.result.createObjectStore('files');
+				};
+				req.onerror = function () { location.href = '/editor'; };
+				req.onsuccess = function () {
+					var db = req.result;
+					try {
+						var tx = db.transaction('files', 'readwrite');
+						tx.objectStore('files').put({ name: file.name, type: file.type, blob: file, ts: Date.now() }, 'pending');
+						tx.oncomplete = function () { location.href = '/editor'; };
+						tx.onerror = function () { location.href = '/editor'; };
+					} catch (e) {
+						location.href = '/editor';
+					}
+				};
+			}
+
+			function stashFiles(list) {
+				// 多个文件时只暂存第一个，其余忽略（编辑器支持多开，这里取主文件）
+				var files = Array.prototype.slice.call(list || []);
+				if (!files.length) return;
+				stashFile(files[0]);
+			}
+
+			document.getElementById('btn-new').addEventListener('click', function () { location.href = '/editor'; });
+			document.getElementById('btn-open').addEventListener('click', function () { input.click(); });
+			input.addEventListener('change', function () { stashFiles(input.files); });
+
+			// 阻止误拖文件到页面时浏览器直接打开图片离开网站
+			window.addEventListener('dragover', function (e) { e.preventDefault(); });
+			window.addEventListener('drop', function (e) { e.preventDefault(); });
+
+			/* ===== 广告轮播：10 秒自动切换 ===== */
+			var ROTATE_MS = 10000;
+			var slidesEl = document.getElementById('slides');
+			var dotsEl = document.getElementById('dots');
+			var hintEl = document.getElementById('ads-hint');
+			var ads = [];
+			var current = 0;
+			var timer = null;
+
+			function activateScripts(container) {
+				// innerHTML 插入的 <script> 不会执行，需要重建
+				var scripts = container.querySelectorAll('script');
+				for (var i = 0; i < scripts.length; i++) {
+					var old = scripts[i];
+					var s = document.createElement('script');
+					for (var j = 0; j < old.attributes.length; j++) {
+						var attr = old.attributes[j];
+						s.setAttribute(attr.name, attr.value);
+					}
+					if (old.text) s.text = old.text;
+					old.parentNode.replaceChild(s, old);
+				}
+			}
+
+			function buildSlide(ad) {
+				var slide = document.createElement('div');
+				slide.className = 'slide';
+				if (ad.html) {
+					var box = document.createElement('div');
+					box.className = 'ad-html';
+					box.innerHTML = ad.html;
+					slide.appendChild(box);
+					slide.dataset.needsScripts = '1';
+				} else {
+					var a = document.createElement('a');
+					a.href = ad.link_url || '#';
+					a.target = '_blank';
+					a.rel = 'noopener nofollow sponsored';
+					var img = document.createElement('img');
+					img.className = 'ad-img';
+					img.src = ad.image_url;
+					img.alt = ad.name;
+					a.appendChild(img);
+					slide.appendChild(a);
+					var cap = document.createElement('span');
+					cap.className = 'ad-caption';
+					cap.textContent = ad.name;
+					slide.appendChild(cap);
+				}
+				return slide;
+			}
+
+			function show(index) {
+				current = (index + ads.length) % ads.length;
+				for (var i = 0; i < slidesEl.children.length; i++) {
+					var el = slidesEl.children[i];
+					var on = i === current;
+					el.classList.toggle('active', on);
+					if (on && el.dataset.needsScripts === '1' && !el.dataset.scriptsDone) {
+						activateScripts(el);
+						el.dataset.scriptsDone = '1';
+					}
+				}
+				var dots = dotsEl.children;
+				for (var d = 0; d < dots.length; d++) {
+					dots[d].classList.toggle('on', d === current);
+				}
+			}
+
+			function startTimer() {
+				stopTimer();
+				if (ads.length > 1) {
+					timer = setInterval(function () { show(current + 1); }, ROTATE_MS);
+				}
+			}
+			function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+			fetch('/api/ads').then(function (r) { return r.json(); }).then(function (data) {
+				ads = (data && data.ads) || [];
+				if (!ads.length) return; // 保留占位提示
+				slidesEl.innerHTML = '';
+				dotsEl.innerHTML = '';
+				ads.forEach(function (ad, i) {
+					slidesEl.appendChild(buildSlide(ad));
+					var dot = document.createElement('button');
+					dot.type = 'button';
+					dot.setAttribute('aria-label', '第' + (i + 1) + '个广告');
+					dot.addEventListener('click', function () { show(i); startTimer(); });
+					dotsEl.appendChild(dot);
+				});
+				hintEl.textContent = ads.length > 1 ? '每 10 秒自动切换' : '';
+				var carousel = document.getElementById('carousel');
+				carousel.addEventListener('mouseenter', stopTimer);
+				carousel.addEventListener('mouseleave', startTimer);
+				show(0);
+				startTimer();
+			}).catch(function () { /* 拉取失败保留占位 */ });
+
+			/* ===== 访问统计上报 ===== */
+			try {
+				navigator.sendBeacon('/api/track', new Blob([JSON.stringify({ page: 'home' })], { type: 'application/json' }));
+			} catch (e) { /* 统计失败不影响使用 */ }
+
+			/* ===== PWA ===== */
+			if ('serviceWorker' in navigator) {
+				window.addEventListener('load', function () {
+					navigator.serviceWorker.register('service-worker.js').catch(function () {});
+				});
+			}
+
+			/* ===== PWA 安装按钮 ===== */
+			var deferredPrompt = null;
+			var installBtn = document.getElementById('btn-install');
+
+			function isStandalone() {
+				return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+			}
+			function isIOS() {
+				return /iphone|ipad|ipod/i.test(navigator.userAgent);
+			}
+			function refreshInstallBtn() {
+				if (isStandalone()) {
+					installBtn.hidden = true; // 已安装
+					return;
+				}
+				if (isIOS()) {
+					// iOS 没有 beforeinstallprompt，展示添加到主屏幕指引
+					installBtn.hidden = false;
+					installBtn.textContent = '⬇ 添加到主屏幕';
+					return;
+				}
+				installBtn.hidden = !deferredPrompt;
+			}
+
+			window.addEventListener('beforeinstallprompt', function (e) {
+				e.preventDefault();
+				deferredPrompt = e;
+				refreshInstallBtn();
+			});
+			window.addEventListener('appinstalled', function () {
+				deferredPrompt = null;
+				installBtn.hidden = true;
+			});
+			installBtn.addEventListener('click', function () {
+				if (isIOS() && !deferredPrompt) {
+					alert('在 iPhone / iPad 上安装：\n点击浏览器底部工具栏的「分享」按钮，再选择「添加到主屏幕」。');
+					return;
+				}
+				if (!deferredPrompt) return;
+				deferredPrompt.prompt();
+				deferredPrompt.userChoice.then(function (choice) {
+					if (choice.outcome === 'accepted') {
+						installBtn.hidden = true;
+					}
+					deferredPrompt = null;
+					refreshInstallBtn();
+				});
+			});
+			refreshInstallBtn();
+		})();
+	</script>
+</body>
+</html>
