@@ -1,0 +1,27 @@
+// Cloudflare Workers 配置：静态资源 + 广告 API Worker + D1 数据库
+// 文档: https://developers.cloudflare.com/workers/static-assets/
+{
+  "name": "ps-tool",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ps-tool-ads",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "pstool-uploads"
+    }
+  ],
+  // 管理密码通过 `npx wrangler secret put ADMIN_PASSWORD` 配置，不写入本文件
+}

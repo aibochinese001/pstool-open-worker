@@ -1,0 +1,16 @@
+{
+  "name": "pstool-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "基于 miniPaint 的中文在线 PS 修图工具，适配 Cloudflare Workers 静态资源部署",
+  "scripts": {
+    "install:app": "npm --prefix app install --no-audit --no-fund",
+    "sync": "node scripts/sync-static.js",
+    "build": "npm run sync && npm --prefix app run build",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

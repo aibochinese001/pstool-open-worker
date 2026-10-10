@@ -1,0 +1,10 @@
+# 本地开发环境变量示例。复制为 .dev.vars 后填入自己的值。
+# .dev.vars 已在 .gitignore 中，不会被上传。
+# 生产环境请用 `npx wrangler secret put <NAME>` 写入，不要写进 wrangler.jsonc。
+
+# 管理后台登录密码（必填）。建议 16 位以上随机串。
+ADMIN_PASSWORD=change-me-to-a-long-random-password
+
+# UV 哈希盐（可选，但强烈建议设置）。用于把访客 IP 哈希成 uv_hash，避免存原始 IP。
+# 留空则使用代码内置的 fallback 盐，任何人都能伪造 UV。
+VISIT_SALT=change-me-to-a-random-salt
